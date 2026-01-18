@@ -31,7 +31,7 @@ async def search_saloons(data: Location):
 
     return result
 
-# ---------------- HEALTH (UPTIMEROBOT SAFE) ----------------
+# ---------------- HEALTH (UPTIMEROBOT SAFE) -----------------
 @app.api_route("/health", methods=["GET", "HEAD", "POST"])
 async def health(response: Response):
     response.headers["Cache-Control"] = "no-store"
