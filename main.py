@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
@@ -26,12 +26,12 @@ async def search_saloons(data: Location):
     if not location:
         raise HTTPException(status_code=400, detail="Location cannot be empty")
 
-    # run Groq in threadpool (IMPORTANT)
+    # run Groq in threadpool
     result = await run_in_threadpool(chatbot, location)
 
     return result
 
-# ---------------- HEALTH ----------------
+# ---------------- HEALTH (UPTIMEROBOT SAFE) ----------------
 @app.api_route("/health", methods=["GET", "HEAD", "POST"])
 async def health(response: Response):
     response.headers["Cache-Control"] = "no-store"
