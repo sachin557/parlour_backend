@@ -1,1 +1,37 @@
-print("Parlour backend")
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel
+from aichat import chatbot
+
+app = FastAPI(title="Salon Search API")
+
+# ---------------- CORS ----------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------- REQUEST MODEL ----------------
+class Location(BaseModel):
+    location_name: str
+
+# ---------------- ROUTE ----------------
+@app.post("/search-saloons")
+async def search_saloons(data: Location):
+    location = data.location_name.strip()
+
+    if not location:
+        raise HTTPException(status_code=400, detail="Location cannot be empty")
+
+    # run Groq in threadpool (IMPORTANT)
+    result = await run_in_threadpool(chatbot, location)
+
+    return result
+
+# ---------------- HEALTH ----------------
+@app.get("/health")
+def health():
+    return {"status": "ok"}

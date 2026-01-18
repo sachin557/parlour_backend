@@ -1,0 +1,6 @@
+fastapi
+ultralytics
+langchain
+langchain-groq
+uvicorn
+python-dotenv
