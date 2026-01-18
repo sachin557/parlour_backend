@@ -32,6 +32,10 @@ async def search_saloons(data: Location):
     return result
 
 # ---------------- HEALTH ----------------
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+@app.api_route("/health", methods=["GET", "HEAD", "POST"])
+async def health(response: Response):
+    response.headers["Cache-Control"] = "no-store"
+    return {
+        "status": "ok",
+        "service": "salon-search-api"
+    }
