@@ -31,7 +31,7 @@ def chatbot(input_text: str) -> dict:
             model="llama-3.1-8b-instant",
             groq_api_key=GROQ_API_KEY,
             temperature=0,
-            max_tokens=700,
+            max_tokens=1200,
             timeout=60,
             response_format={"type": "json_object"},  # 🔥 CRITICAL
         )
