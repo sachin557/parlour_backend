@@ -5,7 +5,7 @@ git commit -m $commit_name
 Start-Sleep -Seconds 5
 $git_push=git push -u origin main 2>&1
 Start-sleep -Seconds 5
-if ($git_push -contains "error"){
+if ($LASTEXITCODE -ne 0){
 write-host "Error occured while git push:`n"
 write-host $git_push
 }
