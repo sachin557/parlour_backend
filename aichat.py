@@ -2,6 +2,7 @@ import os
 import json
 from fastapi import HTTPException
 from dotenv import load_dotenv
+
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,8 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # ================= ENV =================
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
+if not os.getenv("GROQ_API_KEY"):
     raise RuntimeError("GROQ_API_KEY is not set")
 
 # ================= JSON SAFETY =================
@@ -21,7 +21,10 @@ def safe_json_parse(text: str) -> dict:
         start = text.find("{")
         end = text.rfind("}") + 1
         if start != -1 and end != -1:
-            return json.loads(text[start:end])
+            try:
+                return json.loads(text[start:end])
+            except Exception:
+                pass
     raise HTTPException(500, "Invalid JSON from AI")
 
 # ================= CORE =================
@@ -29,26 +32,31 @@ def chatbot(input_text: str) -> dict:
     try:
         model = ChatGroq(
             model="llama-3.1-8b-instant",
-            groq_api_key=GROQ_API_KEY,
             temperature=0,
             max_tokens=1200,
             timeout=60,
-            response_format={"type": "json_object"},  # 🔥 CRITICAL
         )
 
         prompt = ChatPromptTemplate.from_messages([
             (
                 "system",
-                "You are a local salon discovery assistant. "
-                "Return top 10 salons near the given location. "
-                "Respond ONLY with valid JSON."
+                """
+You are a local salon discovery assistant.
+
+Rules:
+- Return ONLY real salons
+- Prefer popular and well-rated places
+- If phone is unknown, return empty string
+- Respond ONLY with valid JSON
+"""
             ),
             (
-                "user",
+                "human",
                 """
 Location: {text}
 
 Return JSON exactly in this format:
+
 {{
   "results": [
     {{
@@ -68,7 +76,7 @@ Return JSON exactly in this format:
 
         raw = chain.invoke({"text": input_text})
 
-        return json.loads(raw)  # ✅ WILL NOT FAIL NOW
+        return safe_json_parse(raw)
 
     except Exception as e:
         print("❌ GROQ ERROR:", repr(e))
