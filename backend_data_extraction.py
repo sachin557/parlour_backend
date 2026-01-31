@@ -4,9 +4,9 @@ import time
 from dotenv import load_dotenv
 import pandas as pd
 
+# Load API Key
 load_dotenv()
 API_KEY = os.getenv("Google_Places_api")
-
 
 def geocode(place):
     url = "https://maps.googleapis.com/maps/api/geocode/json"
@@ -14,7 +14,6 @@ def geocode(place):
         "address": place,
         "key": API_KEY
     }
-
     res = requests.get(url, params=params).json()
 
     if not res.get("results"):
@@ -29,11 +28,10 @@ def find_saloons(lat, lng, radius=3000):
     params = {
         "location": f"{lat},{lng}",
         "radius": radius,
-        "keyword": "salon",
-        "type": "beauty_salon",
+        "keyword": "parlour",
+        "type": "men parlour",
         "key": API_KEY
     }
-
     res = requests.get(url, params=params).json()
     return res.get("results", [])
 
@@ -42,17 +40,26 @@ def get_contact_details(place_id):
     url = "https://maps.googleapis.com/maps/api/place/details/json"
     params = {
         "place_id": place_id,
-        "fields": "formatted_phone_number,international_phone_number,website",
+        "fields": (
+            "formatted_phone_number,"
+            "international_phone_number,"
+            "website,"
+            "opening_hours.weekday_text,"
+            "url"
+        ),
         "key": API_KEY
     }
 
     res = requests.get(url, params=params).json()
     result = res.get("result", {})
 
+    opening_hours = result.get("opening_hours", {}).get("weekday_text")
+
     return {
-        "phone": result.get("formatted_phone_number"),
         "international_phone": result.get("international_phone_number"),
-        "website": result.get("website")
+        "website": result.get("website"),
+        "opening_hours": "; ".join(opening_hours) if opening_hours else None,
+        "map_link": result.get("url")
     }
 
 
@@ -70,30 +77,49 @@ def format_results(results):
     return saloons
 
 
-
-place = "Surathkal mangalore"
+place = "Surathkal Mangalore"
 
 coords = geocode(place)
+
 if not coords:
     print("Location not found")
-else:
-    lat, lng = coords
-    raw = find_saloons(lat, lng)
-    saloons = format_results(raw)
+    exit()
 
-cols=["name","address","rating","open_now","international_phone","website"]
-df=pd.DataFrame(columns=cols)
-data={key:[] for key in cols}
-for s in saloons[:25]:
+lat, lng = coords
+raw_results = find_saloons(lat, lng)
+saloons = format_results(raw_results)
+
+# Excel Columns
+cols = [
+    "name",
+    "address",
+    "rating",
+    "open_now",
+    "opening_hours",
+    "international_phone",
+    "website",
+    "map_link"
+]
+
+data = {key: [] for key in cols}
+
+for s in saloons[:35]:  # limit to avoid quota issues
     contact = get_contact_details(s["place_id"])
     s.update(contact)
-    time.sleep(0.2)
-    #print(s)
-    for key,values in s.items():
-        if key in cols:
-            data[key].append(values)
-df=pd.DataFrame(data)
-current_dir=os.getcwd()
-file="Backend_saloons_data.xlsx"
-path=os.path.join(current_dir,file)
-df.to_excel(path,index=False)
+
+    for key in cols:
+        data[key].append(s.get(key))
+
+    time.sleep(0.25) 
+
+df = pd.DataFrame(data)
+
+# Save to Excel
+current_dir = os.getcwd()
+file_name = "Backend_parlour_men_data.xlsx"
+path = os.path.join(current_dir, file_name)
+
+df.to_excel(path, index=False)
+
+print("Completed Successfully...")
+print(f" File saved at: {path}")
