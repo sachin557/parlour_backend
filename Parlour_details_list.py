@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-# 📁 Always resolve path relative to this file (NOT cwd)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 EXCEL_FILE_MAP = {
@@ -25,7 +25,7 @@ REQUIRED_COLUMNS = [
     "map_link",
 ]
 
-def get_parlour_list(gender: str, category: str, limit: int = 15):
+def get_parlour_list(gender: str, category: str, sort_by_rating: str, limit: int = 15):
     key = (gender.lower(), category.lower())
 
     # ❌ Invalid gender/category
@@ -41,7 +41,8 @@ def get_parlour_list(gender: str, category: str, limit: int = 15):
 
     # 📊 Load Excel
     df = pd.read_excel(file_path)
-
+    if sort_by_rating.lower() == "low":
+        df=df.sort_values(by="rating",ascending=True).reset_index(drop=True)
     # ❌ Remove rows without salon name
     df.dropna(subset=["name"], inplace=True)
 

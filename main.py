@@ -24,7 +24,8 @@ app.add_middleware(
 
 class SalonRequest(BaseModel):
     gender: str       # men / women
-    category: str     # hair / spa / makeup
+    category: str  
+    sort: str   # hair / spa / makeup
 
 
 class AiSearchRequest(BaseModel):
@@ -36,7 +37,7 @@ class AiSearchRequest(BaseModel):
 async def search_saloons(data: SalonRequest):
     gender = data.gender.strip().lower()
     category = data.category.strip().lower()
-
+    sort_by_rating=data.sort.strip().lower()
     if gender not in {"men", "women"}:
         raise HTTPException(status_code=400, detail="Invalid gender")
 
@@ -48,6 +49,7 @@ async def search_saloons(data: SalonRequest):
             get_parlour_list,
             gender,
             category,
+            sort_by_rating
         )
     except FileNotFoundError:
         raise HTTPException(
