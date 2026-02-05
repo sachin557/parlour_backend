@@ -5,3 +5,4 @@ langchain-groq
 uvicorn
 python-dotenv
 pandas
+openpyxl
