@@ -7,13 +7,13 @@ from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-# ================= ENV =================
+# env variable loading
 load_dotenv()
 
 if not os.getenv("GROQ_API_KEY"):
     raise RuntimeError("GROQ_API_KEY is not set")
 
-# ================= JSON SAFETY =================
+# jason parsing
 def safe_json_parse(text: str) -> dict:
     try:
         return json.loads(text)
@@ -27,7 +27,7 @@ def safe_json_parse(text: str) -> dict:
                 pass
     raise HTTPException(500, "Invalid JSON from AI")
 
-# ================= CORE =================
+# creating model and searching for results with saloon name
 def chatbot(input_text: str) -> dict:
     try:
         model = ChatGroq(
@@ -79,7 +79,7 @@ Return JSON exactly in this format:
         return safe_json_parse(raw)
 
     except Exception as e:
-        print("❌ GROQ ERROR:", repr(e))
+        print("GROQ ERROR:", repr(e))
         raise HTTPException(
             status_code=503,
             detail="Groq AI service unavailable"

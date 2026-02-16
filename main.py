@@ -3,16 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from typing import List, Dict, Optional
-
-# ================= LOCAL IMPORTS =================
-from Parlour_details_list import get_parlour_list   # Excel-based
-from aichat import chatbot                          # Groq AI search
+from Parlour_details_list import get_parlour_list   
+from aichat import chatbot                        
 
 
-# ================= APP INIT =================
+# Naming the api
 app = FastAPI(title="Salon Platform API")
 
-# ================= CORS =================
+# cors for taking any url *
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ================= REQUEST MODELS =================
+# setting the datatype for variable
 
 class SalonRequest(BaseModel):
     gender: str       # men / women
@@ -32,7 +30,7 @@ class AiSearchRequest(BaseModel):
     location_name: str
 
 
-# ================= EXCEL SALON SEARCH =================
+# saloon details search
 @app.post("/search-saloons")
 async def search_saloons(data: SalonRequest):
     gender = data.gender.strip().lower()
@@ -57,7 +55,7 @@ async def search_saloons(data: SalonRequest):
             detail=f"No data found for {gender} - {category}",
         )
     except Exception as e:
-        print("❌ SALON EXCEL ERROR:", e)
+        print(" SALON EXCEL ERROR:", e)
         raise HTTPException(
             status_code=503,
             detail="Salon data service unavailable",
@@ -71,7 +69,7 @@ async def search_saloons(data: SalonRequest):
     }
 
 
-# ================= AI SALON SEARCH (GROQ) =================
+# ai chat search
 @app.post("/ai-search")
 async def ai_search(data: AiSearchRequest):
     location = data.location_name.strip()
@@ -86,7 +84,7 @@ async def ai_search(data: AiSearchRequest):
             location,
         )
     except Exception as e:
-        print("❌ AI SEARCH ERROR:", e)
+        print(" AI SEARCH ERROR:", e)
         raise HTTPException(
             status_code=503,
             detail="AI search service unavailable",
@@ -95,7 +93,7 @@ async def ai_search(data: AiSearchRequest):
     return result
 
 
-# ================= HEALTH =================
+# Render ping to keep the backend alive 
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health(response: Response):
     response.headers["Cache-Control"] = "no-store"

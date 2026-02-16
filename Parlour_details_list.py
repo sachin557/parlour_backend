@@ -28,34 +28,34 @@ REQUIRED_COLUMNS = [
 def get_parlour_list(gender: str, category: str, sort_by_rating: str, limit: int = 15):
     key = (gender.lower(), category.lower())
 
-    # ❌ Invalid gender/category
+    # Invalid gender/category
     if key not in EXCEL_FILE_MAP:
         raise ValueError("Invalid gender/category combination")
 
     file_name = EXCEL_FILE_MAP[key]
     file_path = os.path.join(BASE_DIR, file_name)
 
-    # ❌ File missing
+    # File missing
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"{file_name} not found")
 
-    # 📊 Load Excel
+    # Load Excel
     df = pd.read_excel(file_path)
     if sort_by_rating.lower() == "low":
         df=df.sort_values(by="rating",ascending=True).reset_index(drop=True)
-    # ❌ Remove rows without salon name
+    # Remove rows without salon name
     df.dropna(subset=["name"], inplace=True)
 
-    # ❌ Validate required columns
+    # Validate required columns
     missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
     if missing:
         raise ValueError(f"Missing columns in Excel: {missing}")
 
-    # 🔥 CRITICAL FIX: Replace NaN → empty string (JSON-safe)
+    # replace nan to empty string
     df = df.where(pd.notna(df), "")
 
-    # 🔢 Limit rows
+    # limit the data
     df = df.head(limit)
 
-    # ✅ Convert to JSON-safe dict
+    # jason dict
     return df.to_dict(orient="records")
